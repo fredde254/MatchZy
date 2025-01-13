@@ -495,66 +495,71 @@ namespace MatchZy
             }
         }
 
-        private void UpdatePlayersMap()
+private void UpdatePlayersMap()
+{
+    try
+    {
+        var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
+        Log($"[UpdatePlayersMap] CCSPlayerController count: {playerEntities.Count<CCSPlayerController>()} matchModeOnly: {matchModeOnly}");
+        connectedPlayers = 0;
+
+        // Clear the playerData dictionary by creating a new instance to add fresh data.
+        playerData = new Dictionary<int, CCSPlayerController>();
+        foreach (var player in playerEntities)
         {
-            try
+            if (player == null) continue;
+            if (!player.IsValid || player.IsBot || player.IsHLTV) continue;
+
+            if (isMatchSetup || matchModeOnly)
             {
-                var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
-                Log($"[UpdatePlayersMap] CCSPlayerController count: {playerEntities.Count<CCSPlayerController>()} matchModeOnly: {matchModeOnly}");
-                connectedPlayers = 0;
-
-                // Clear the playerData dictionary by creating a new instance to add fresh data.
-                playerData = new Dictionary<int, CCSPlayerController>();
-                foreach (var player in playerEntities)
+                CsTeam team = GetPlayerTeam(player);
+                if (team == CsTeam.None && player.UserId.HasValue)
                 {
-                    if (player == null) continue;
-                    if (!player.IsValid || player.IsBot || player.IsHLTV) continue;
-
-                    if (isMatchSetup || matchModeOnly)
-                    {
-                        CsTeam team = GetPlayerTeam(player);
-                        if (team == CsTeam.None && player.UserId.HasValue)
-                        {
-                            Server.ExecuteCommand($"kickid {(ushort)player.UserId}");
-                            continue;
-                        }
-                    }
-
-                    // A player controller still exists after a player disconnects
-                    // Hence checking whether the player is actually in the server or not
-                    if (player.Connected != PlayerConnectedState.PlayerConnected) continue;
-
-                    if (player.UserId.HasValue)
-                    {
-
-                        // Updating playerData and playerReadyStatus
-                        playerData[player.UserId.Value] = player;
-
-                        // Adding missing player in playerReadyStatus
-                        if (!playerReadyStatus.ContainsKey(player.UserId.Value))
-                        {
-                            playerReadyStatus[player.UserId.Value] = false;
-                        }
-                    }
-                    connectedPlayers++;
+                    Server.ExecuteCommand($"kickid {(ushort)player.UserId}");
+                    continue;
                 }
-
-                // Removing disconnected players from playerReadyStatus
-                foreach (var key in playerReadyStatus.Keys.ToList())
-                {
-                    if (!playerData.ContainsKey(key))
-                    {
-                        // Key is not present in playerData, so remove it from playerReadyStatus
-                        playerReadyStatus.Remove(key);
-                    }
-                }
-                Log($"[UpdatePlayersMap] CCSPlayerController count: {playerEntities.Count<CCSPlayerController>()}, RealPlayersCount: {GetRealPlayersCount()}");
             }
-            catch (Exception e)
+
+            // A player controller still exists after a player disconnects
+            // Hence checking whether the player is actually in the server or not
+            if (player.Connected != PlayerConnectedState.PlayerConnected) continue;
+
+            if (player.UserId.HasValue)
             {
-                Log($"[UpdatePlayersMap FATAL] An error occurred: {e.Message}");
+                // Updating playerData and playerReadyStatus
+                playerData[player.UserId.Value] = player;
+
+                // Adding missing player in playerReadyStatus
+                if (!playerReadyStatus.ContainsKey(player.UserId.Value))
+                {
+                    playerReadyStatus[player.UserId.Value] = false;
+                }
+            }
+            connectedPlayers++;
+        }
+
+        // Removing disconnected players from playerReadyStatus
+        foreach (var key in playerReadyStatus.Keys.ToList())
+        {
+            if (!playerData.ContainsKey(key))
+            {
+                // Key is not present in playerData, so remove it from playerReadyStatus
+                playerReadyStatus.Remove(key);
             }
         }
+        Log($"[UpdatePlayersMap] CCSPlayerController count: {playerEntities.Count<CCSPlayerController>()}, RealPlayersCount: {GetRealPlayersCount()}");
+    }
+    catch (CounterStrikeSharp.API.Core.NativeException ex) 
+        when (ex.Message.Contains("Entity system yet is not initialized"))
+    {
+        Log("[UpdatePlayersMap] Entity system not initialized. Retrying in 1 second.");
+        AddTimer(1.0f, UpdatePlayersMap);
+    }
+    catch (Exception e)
+    {
+        Log($"[UpdatePlayersMap FATAL] An error occurred: {e.Message}");
+    }
+}
 
         public void DetermineKnifeWinner()
         {
