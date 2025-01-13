@@ -251,18 +251,17 @@ namespace MatchZy
             return "";
         }
 
-        public bool LoadMatchFromJSON(string jsonData)
+public bool LoadMatchFromJSON(string jsonData)
+{
+    try
+    {
+        JObject jsonDataObject = JObject.Parse(jsonData);
+        string validationError = ValidateMatchJsonStructure(jsonDataObject);
+        if (validationError != "")
         {
-            
-            JObject jsonDataObject = JObject.Parse(jsonData);
-
-            string validationError = ValidateMatchJsonStructure(jsonDataObject);
-
-            if (validationError != "")
-            {
-                Log($"[LoadMatchDataCommand] {validationError}");
-                return false;
-            }
+            Log($"[LoadMatchDataCommand] {validationError}");
+            return false;
+        }
 
             if(jsonDataObject["matchid"] != null)
             {
@@ -380,9 +379,22 @@ namespace MatchZy
                 await SendEventAsync(seriesStartedEvent);
             });
 
-            Log($"[LoadMatchFromJSON] Success with matchid: {liveMatchId}!");
-            return true;
-        }
+        Log($"[LoadMatchFromJSON] Success with matchid: {liveMatchId}!");
+        return true;
+    }
+    catch (CounterStrikeSharp.API.Core.NativeException ex)
+        when (ex.Message.Contains("Entity system yet is not initialized"))
+    {
+        Log("[LoadMatch] Entity system not initialized. Retrying in 1 second.");
+        AddTimer(1.0f, () => LoadMatchFromJSON(jsonData));
+        return false;
+    }
+    catch (Exception e)
+    {
+        Log($"[LoadMatch - FATAL] An error occurred: {e.Message}");
+        return false;
+    }
+}
 
         public void SetMapSides() {
             int mapNumber = matchConfig.CurrentMapNumber;
