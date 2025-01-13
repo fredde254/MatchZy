@@ -1817,15 +1817,21 @@ namespace MatchZy
             }
         }
 
-        public bool IsPlayerValid(CCSPlayerController? player)
-        {
-            return (
-                player != null &&
+public bool IsPlayerValid(CCSPlayerController? player)
+{
+    try
+    {
+        return (player != null &&
                 player.IsValid &&
                 player.PlayerPawn.IsValid &&
-                player.PlayerPawn.Value != null
-            );
-        }
+                player.PlayerPawn.Value != null);
+    }
+    catch (CounterStrikeSharp.API.Core.NativeException ex) when (ex.Message.Contains("Entity system yet is not initialized"))
+    {
+        // Entity system is not ready, so player can't be validated yet
+        return false;
+    }
+}
 
         public static Color GetPlayerTeammateColor(CCSPlayerController playerController)
         {
