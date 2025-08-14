@@ -3,7 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Events;
 
 
 namespace MatchZy
@@ -13,7 +13,7 @@ namespace MatchZy
     {
 
         public override string ModuleName => "MatchZy";
-        public override string ModuleVersion => "0.8.8";
+        public override string ModuleVersion => "0.8.11";
 
         public override string ModuleAuthor => "WD- (https://github.com/shobhit-pathak/)";
 
@@ -534,7 +534,7 @@ namespace MatchZy
             RegisterEventHandler<EventFlashbangDetonate>(EventFlashbangDetonateHandler);
             RegisterEventHandler<EventHegrenadeDetonate>(EventHegrenadeDetonateHandler);
             RegisterEventHandler<EventMolotovDetonate>(EventMolotovDetonateHandler);
-            RegisterEventHandler<EventDecoyDetonate>(EventDecoyDetonateHandler);
+            RegisterEventHandler<EventDecoyStarted>(EventDecoyDetonateHandler);
 
             Console.WriteLine($"[{ModuleName} {ModuleVersion} LOADED] MatchZy by WD- (https://github.com/shobhit-pathak/)");
         }

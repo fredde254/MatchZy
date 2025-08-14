@@ -1,5 +1,27 @@
 # MatchZy Changelog
 
+# 0.8.11
+
+#### August 9, 2025
+
+- Updated CSS Version
+- Fixed SmokeGrenadeProjectile Signatures
+
+# 0.8.10
+
+#### May 12, 2025
+
+- Fixed decoy airtime in Practice Mode. (Switched `EventDecoyDetonate` to `EventDecoyStarted` so it takes the air time once it lands, and not when the decoy finishes)
+- Added `.ct` and `.t` command for side selection after knife round.
+- Rename `ive_wingman_override.cfg` to `live_wingman_override.cfg`
+- Fixed es-ES.json
+
+# 0.8.9
+
+#### April 3, 2025
+
+- Fixed issue with EventPlayerChat (. commands) post CSSharp v315 update.
+
 # 0.8.8
 
 #### January 1, 2025
